@@ -14,7 +14,7 @@ This is a small showcase on how to bootstrap a simple mailing service with Symfo
 ```bash
 $ composer create-project symfony/skeleton:^4.0@beta flex-mailer
 $ cd flex-mailer
-$ composer req logger cli annotations mailer twig 
+$ composer req logger annotations mailer twig 
 ```
 
 ![gif](./mailer-setup.gif)
