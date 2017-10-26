@@ -14,11 +14,11 @@ This is a small showcase on how to bootstrap a simple mailing service with Symfo
 ```bash
 $ composer create-project symfony/skeleton:^4.0@beta flex-mailer
 $ cd flex-mailer
-$ composer req logger annotations mailer twig 
+$ composer req logger annotations mailer twig
 ```
 
 ![gif](./mailer-setup.gif)
-   
+
 ### 2. Configure routing and swiftmailer
 
 ```yaml
@@ -38,29 +38,7 @@ controllers:
        _format: json
 ```
 
-### 3. Implement Controller as HTTP glue
-
-```php
-    // src/Controller/MailingController.php
- 
-    /**
-     * @Route("registration", name="registration", methods={"POST"})
-     */
-    public function registrationAction(Request $request, Mailer $mailer, string $recipient): Response
-    {
-        $data = json_decode($request->getContent(), true);
-     
-        if (!array_key_exists('recipient', $data)) {
-            throw new BadRequestHttpException('Request payload must contain "recipient" key.');
-        }
-        
-        $mailer->sendRegistrationMail($data['recipient'], $data);
-        
-        return Response::create();
-    }
-```
-       
-### 4. Implement Mailer Business Logic to render templates and spool mails
+### 3. Implement Mailer Business Logic to render templates and spool mails
 
 ```php
 
@@ -72,28 +50,28 @@ class Mailer
 {
     private $swiftMailer;
     private $twig;
-    
+
     public function __construct(\Swift_Mailer $swiftMailer, Environment $twig)
     {
         $this->swiftMailer = $swiftMailer;
         $this->twig = $twig;
     }
-    
+
     public function sendRegistrationMail(string $recipient, array $data): void
     {
         $this->sendMail('registration.twig', $recipient, $data);
     }
-    
+
     // way more mail functions...
-    
+
     private function sendMail(string $template, string $recipient, array $data): void
     {
         $template = $this->twig->load($template);
-     
+
         $subject = $template->renderBlock('subject', $data);
         $htmlContent = $template->renderBlock('html_content', $data);
         $textContent = $template->renderBlock('text_content', $data);
-        
+
         /** @var \Swift_Message $message */
         $message = $this->swiftMailer->createMessage();
         $message
@@ -102,17 +80,50 @@ class Mailer
             ->setSubject($subject)
             ->setBody($textContent, 'text/plain')
             ->addPart($htmlContent, 'text/html');
-            
+
         $this->swiftMailer->send($message);
     }
 }
+```
+
+### 4. Implement Controller as HTTP glue
+
+```php
+    // src/Controller/MailingController.php
+namespace App\Controller;
+
+use App\Mailer;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\Routing\Annotation\Route;
+
+class MailingController
+{
+    /**
+     * @Route("/registration", name="registration", methods={"POST"})
+     */
+    public function registrationAction(Request $request, Mailer $mailer): Response
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (!array_key_exists('recipient', $data)) {
+            throw new BadRequestHttpException('Request payload must contain "recipient" key.');
+        }
+
+        $mailer->sendRegistrationMail($data['recipient'], $data);
+
+        return Response::create();
+    }
+}
+
 ```
 
 ### 5. Start app and test
 
 ```bash
 $ php -S 127.0.0.1:8000 -t public
-  
+
   PHP 7.1.8 Development Server started at Fri Oct 27 21:19:29 2017
   Listening on http://127.0.0.1:8000
   Document root is /path/to/flex-mailer/public
@@ -121,7 +132,7 @@ $ php -S 127.0.0.1:8000 -t public
 
 ```bash
 $ curl -i -X POST -d '{"recipient":"chris@sensiolabs.de","name":"Chris"}' http://localhost:8000/registration
-  
+
   HTTP/1.1 200 OK
   Host: localhost:8000
   Date: Fri, 13 Oct 2017 15:03:57 +0000
@@ -130,10 +141,10 @@ $ curl -i -X POST -d '{"recipient":"chris@sensiolabs.de","name":"Chris"}' http:/
   Cache-Control: no-cache, private
   Date: Fri, 13 Oct 2017 15:03:57 GMT
   Content-Type: application/json
-  
+
 $ bin/console swiftmailer:spool:send
-  
-  [2017-10-27 19:11:43] Processing default mailer spool... 
+
+  [2017-10-27 19:11:43] Processing default mailer spool...
    1 emails sent
 ```
 
