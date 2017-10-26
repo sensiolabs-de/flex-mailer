@@ -63,6 +63,11 @@ controllers:
 ### 4. Implement Mailer Business Logic to render templates and spool mails
 
 ```php
+
+namespace App;
+
+use Twig\Environment;
+
 class Mailer
 {
     private $swiftMailer;
