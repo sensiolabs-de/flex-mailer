@@ -41,6 +41,7 @@ controllers:
 ### 3. Implement Mailer Business Logic to render templates and spool mails
 
 ```php
+// src/Mailer.php
 
 namespace App;
 
@@ -86,7 +87,27 @@ class Mailer
 }
 ```
 
-### 4. Implement Controller as HTTP glue
+### 4. Create template
+
+```html
+{# templates/registration.twig #}
+
+{% block subject 'Registration Mail' %}
+
+{% block html_content %}
+    <h1>Welcome {{ name }}!</h1>
+
+    You have registered successfully.
+{% endblock %}
+
+{% block text_content %}
+    Welcome {{ name }}!
+
+    You have registered successfully.
+{% endblock %}
+```
+
+### 5. Implement Controller as HTTP glue
 
 ```php
     // src/Controller/MailingController.php
@@ -119,7 +140,7 @@ class MailingController
 
 ```
 
-### 5. Start app and test
+### 6. Start app and test
 
 ```bash
 $ php -S 127.0.0.1:8000 -t public
